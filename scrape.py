@@ -25,7 +25,8 @@ HISTORY = DATA_DIR / "price_history.csv"
 # Shopify shops expose their whole catalogue at /products.json.
 # Add more here later - the rest of the code doesn't need to change.
 SHOPS = {
-    "amahaho": "https://amahaho.com",
+    "amahaho":  "https://amahaho.com",
+    "murukali": "https://murukali.com",
 }
  
 # Pretend to be a normal browser and say who we are. Some sites block
