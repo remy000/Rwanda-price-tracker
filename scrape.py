@@ -34,26 +34,33 @@ SHOPS = {
 HEADERS = {
     "User-Agent": "rwanda-price-tracker/1.0 (personal data science project)"
 }
- 
+
+MAX_PAGES=200
  
 def fetch_shop(name: str, base_url: str) -> pd.DataFrame:
-    """Page through one shop's catalogue and return everything it sells."""
+    """Page through a shop's catalogue, keeping whatever we manage to get."""
     rows = []
     page = 1
- 
-    while True:
-        r = requests.get(
-            f"{base_url}/products.json",
-            params={"limit": 250, "page": page},
-            headers=HEADERS,
-            timeout=30,
-        )
-        r.raise_for_status()
- 
-        products = r.json().get("products", [])
+
+    while page <= MAX_PAGES:
+        try:
+            r = requests.get(
+                f"{base_url}/products.json",
+                params={"limit": 250, "page": page},
+                headers=HEADERS,
+                timeout=30,
+            )
+            r.raise_for_status()
+            products = r.json().get("products", [])
+        except Exception as e:
+            # Some shops error instead of returning an empty page when you
+            # reach the end. Stop, but keep everything collected so far.
+            print(f"  {name}: stopped at page {page} ({type(e).__name__})")
+            break
+
         if not products:
             break
- 
+
         for p in products:
             if not p.get("variants"):
                 continue
@@ -64,12 +71,13 @@ def fetch_shop(name: str, base_url: str) -> pd.DataFrame:
                 "title": p["title"].strip(),
                 "category": p.get("product_type") or "uncategorised",
                 "price_rwf": float(v["price"]),
+                "grams": v.get("grams") or 0,
                 "in_stock": bool(v["available"]),
             })
- 
+
         page += 1
-        time.sleep(1)          # one request per second - don't hammer them
- 
+        time.sleep(1)
+
     print(f"  {name}: {len(rows)} products")
     return pd.DataFrame(rows)
  
