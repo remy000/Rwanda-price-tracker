@@ -1,4 +1,3 @@
-Y
 """
 Rwanda Price Tracker - daily scraper.
  
