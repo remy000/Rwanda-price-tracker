@@ -1,0 +1,37 @@
+name: Daily price scrape
+ 
+on:
+  schedule:
+    # 04:00 UTC = 06:00 in Kigali (Rwanda is UTC+2)
+    - cron: "0 4 * * *"
+  workflow_dispatch:      # lets you also run it by hand from the Actions tab
+ 
+permissions:
+  contents: write         # needed so the job can save the CSV back to the repo
+ 
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Get the repo
+        uses: actions/checkout@v4
+ 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+ 
+      - name: Install packages
+        run: pip install -r requirements.txt
+ 
+      - name: Run the scraper
+        run: python scrape.py
+ 
+      - name: Save the new prices
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/price_history.csv
+          git diff --staged --quiet || git commit -m "prices for $(date -u +%Y-%m-%d)"
+          git push
